@@ -1,3 +1,7 @@
-TO START THE ENVIR0NMENT : .\stockenv\Scripts\activate
-streamlit run app.py
-XPOBZSFA1A8EI8F9'
+streamlit
+pandas
+numpy
+matplotlib
+scikit-learn
+tensorflow
+requests
