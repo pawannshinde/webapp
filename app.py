@@ -1,4 +1,5 @@
-import streamlit as st
+print("we are currently working get back to you soon")
+'''import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from model_utils import get_data_from_alpha_vantage, train_and_return_model
@@ -93,5 +94,5 @@ trend_table = df[['Close', 'Prev_Close', 'Prev_Low', 'Volume', 'Prev_Volume', 'T
 # Display in Streamlit
 st.subheader("📊 Trend Detection Table")
 st.dataframe(trend_table.tail(10))
-
+'''
 
