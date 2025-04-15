@@ -7,6 +7,4 @@ tensorflow
 requests
 firebase-admin
 python-dotenv
-google-auth
-pyjwt
 pyrebase4
