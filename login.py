@@ -25,7 +25,10 @@ def login(email, password):
     # This is a placeholder that assumes login is successful
     st.session_state.authenticated = True
     st.session_state.user_email = email
-    st.experimental_rerun()
+
+    # Only rerun the script if the user is successfully authenticated
+    if st.session_state.authenticated:
+        st.experimental_rerun()
 
 def logout():
     st.session_state.authenticated = False
