@@ -1,4 +1,3 @@
-# firebase_config.py
 firebase_config = {
     "apiKey": "AIzaSyArFHlSu3ae8eTrUzQx01Hbt8fosdmvlAY",
     "authDomain": "smartcapital-5d4ee.firebaseapp.com",
@@ -6,5 +5,6 @@ firebase_config = {
     "storageBucket": "smartcapital-5d4ee.appspot.com",
     "messagingSenderId": "692185320907",
     "appId": "1:692185320907:web:6a9bfe8b4f828cac437a4e",
-    "measurementId": "G-063CQ70E3J"
+    "measurementId": "G-063CQ70E3J",
+    "databaseURL": "https://smartcapital-5d4ee-default-rtdb.firebaseio.com/"  # Add this line
 }
