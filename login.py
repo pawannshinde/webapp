@@ -50,18 +50,24 @@ def login_ui():
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
+    rerun_needed = False
+
     with tab1:
         login_email = st.text_input("📧 Email", key="login_email")
         login_password = st.text_input("🔑 Password", type="password", key="login_password")
         if st.button("Login", key="login_button"):
             if login(login_email, login_password):
-                st.experimental_rerun()
+                rerun_needed = True
 
     with tab2:
         signup_email = st.text_input("📧 Email", key="signup_email")
         signup_password = st.text_input("🔑 Password", type="password", key="signup_password")
         if st.button("Create Account", key="signup_button"):
             if signup(signup_email, signup_password):
-                st.experimental_rerun()
+                rerun_needed = True
+
+    # Only rerun after UI is built and session state is set
+    if rerun_needed:
+        st.experimental_rerun()
 
     return st.session_state["authenticated"], st.session_state["user_email"]
