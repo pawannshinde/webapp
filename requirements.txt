@@ -5,3 +5,7 @@ matplotlib
 scikit-learn
 tensorflow
 requests
+firebase-admin
+python-dotenv
+google-auth
+pyjwt
