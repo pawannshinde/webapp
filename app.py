@@ -1,9 +1,9 @@
 import streamlit as st
+import os
+import matplotlib.pyplot as plt
+import joblib
 from login import login_ui, logout
 from model_utils import get_data_from_alpha_vantage, train_and_return_model
-import pandas as pd
-import matplotlib.pyplot as plt
-import os
 
 st.set_page_config(page_title="📈 SmartCapital - Stock Analysis", layout="wide")
 
@@ -35,16 +35,14 @@ if st.button("Predict"):
         # Load or train model
         model_path = f"{symbol}_model.h5"
         scaler_path = f"{symbol}_scaler.pkl"
-        if os.path.exists(model_path):
+        if os.path.exists(model_path) and os.path.exists(scaler_path):
             from tensorflow.keras.models import load_model
-            import joblib
             model = load_model(model_path)
             scaler = joblib.load(scaler_path)
         else:
             df = get_data_from_alpha_vantage(symbol)
             model, scaler = train_and_return_model(df)
             model.save(model_path)
-            import joblib
             joblib.dump(scaler, scaler_path)
 
         # Get recent data for prediction
@@ -68,6 +66,4 @@ if st.button("Predict"):
 # Logout button
 if st.button("Logout", key="logout_button"):
     logout()
-    st.rerun()
-
-
+    st.experimental_rerun()
