@@ -1,11 +1,9 @@
 import streamlit as st
-import firebase_admin
-from firebase_admin import credentials, auth
+import pyrebase
+from firebase_config import firebase_config
 
-# Initialize Firebase only once
-if not firebase_admin._apps:
-    cred = credentials.Certificate("smartcapital-5d4ee-firebase-adminsdk-fbsvc-a46f6ce0c0.json")
-    firebase_admin.initialize_app(cred)
+firebase = pyrebase.initialize_app(firebase_config)
+auth = firebase.auth()
 
 def init_session_state():
     if "authenticated" not in st.session_state:
@@ -23,7 +21,7 @@ def init_session_state():
 
 def signup(email, password):
     try:
-        auth.create_user(email=email, password=password)
+        auth.create_user_with_email_and_password(email, password)
         st.success("✅ Account created! Please log in.")
         return True
     except Exception as e:
@@ -31,15 +29,20 @@ def signup(email, password):
         return False
 
 def login(email, password):
-    # NOTE: Firebase Admin SDK cannot verify passwords.
-    # This is a placeholder for demonstration.
-    st.session_state["authenticated"] = True
-    st.session_state["user_email"] = email
-    return True
+    try:
+        user = auth.sign_in_with_email_and_password(email, password)
+        st.session_state["authenticated"] = True
+        st.session_state["user_email"] = email
+        st.session_state["id_token"] = user['idToken']
+        return True
+    except Exception as e:
+        st.error("❌ Invalid email or password.")
+        return False
 
 def logout():
     st.session_state["authenticated"] = False
     st.session_state["user_email"] = ""
+    st.session_state["id_token"] = ""
     st.session_state["login_email"] = ""
     st.session_state["login_password"] = ""
 
@@ -66,7 +69,6 @@ def login_ui():
             if signup(signup_email, signup_password):
                 rerun_needed = True
 
-    # Only rerun after UI is built and session state is set
     if rerun_needed:
         st.experimental_rerun()
 
