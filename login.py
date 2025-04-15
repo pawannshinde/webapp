@@ -12,6 +12,10 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 if "user_email" not in st.session_state:
     st.session_state.user_email = ""
+if "signup_email" not in st.session_state:
+    st.session_state.signup_email = ""
+if "signup_pass" not in st.session_state:
+    st.session_state.signup_pass = ""
 
 def signup(email, password):
     try:
