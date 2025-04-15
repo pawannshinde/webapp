@@ -66,7 +66,8 @@ if st.button("Predict"):
         st.error(f"Error: {e}")
 
 # Logout button
-if st.button("Logout"):
+if st.button("Logout", key="logout_button"):
     logout()
+    st.rerun()
 
 
