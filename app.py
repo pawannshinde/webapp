@@ -30,11 +30,13 @@ SmartCapital uses state-of-the-art machine learning models to:
 # Stock prediction section
 st.subheader("Stock Price Prediction")
 symbol = st.text_input("Enter Stock Symbol (e.g., AAPL for Apple):", "AAPL").upper()
+
 if st.button("Predict"):
     try:
         # Load or train model
         model_path = f"{symbol}_model.h5"
         scaler_path = f"{symbol}_scaler.pkl"
+        
         if os.path.exists(model_path) and os.path.exists(scaler_path):
             from tensorflow.keras.models import load_model
             model = load_model(model_path)
@@ -51,6 +53,7 @@ if st.button("Predict"):
         scaled_data = scaler.transform(recent_data)
         X = scaled_data.reshape(1, 60, 5)
         prediction = model.predict(X)[0][0]
+        
         st.write(f"Prediction for {symbol}: {'Up' if prediction > 0.5 else 'Down'} (Confidence: {prediction:.2f})")
 
         # Plot closing prices
@@ -61,9 +64,10 @@ if st.button("Predict"):
         st.pyplot(fig)
 
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Error: {str(e)}")
 
-# Logout button
-if st.button("Logout", key="logout_button"):
-    logout()
-    st.experimental_rerun()
+# Logout button in sidebar
+with st.sidebar:
+    if st.button("Logout"):
+        logout()
+        st.rerun()
