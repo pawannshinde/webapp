@@ -110,9 +110,6 @@ def login_ui():
         if st.button("Login", key="login_button"):
             if login_email and login_password:
                 if login(login_email, login_password):
-                    st.success("Logged in successfully!")
-                    st.experimental_rerun()
-            else:
-                st.warning("Please enter both email and password.")
+                    st.success("Logged in successfully! Please wait...")
 
     return st.session_state.get("authenticated", False), st.session_state.get("user_email", "")
