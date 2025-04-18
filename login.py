@@ -78,7 +78,7 @@ def login_ui():
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="brand-title">SmartCapital.ai</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">Find career opportunities</div>', unsafe_allow_html=True)
+    
 
     with st.expander("About Us"):
         st.markdown("""
