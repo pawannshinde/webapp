@@ -50,58 +50,58 @@ def logout():
 def login_ui():
     init_session_state()
 
-    # Custom CSS for clean white & blue theme
+    # CSS for blue bar and brand
     st.markdown("""
         <style>
-        .main-title {
+        .blue-bar {
+            background: #2d7cff;
+            color: #fff !important;
+            padding: 1.2em 1em 1.2em 1em;
+            border-radius: 12px;
+            margin-bottom: 1.5em;
+            text-align: center;
+            font-size: 1.15rem;
             font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 2.8rem;
+            font-weight: 500;
+        }
+        .brand-title {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 2.5rem;
             font-weight: bold;
             color: #2d7cff;
             letter-spacing: 2px;
             text-align: center;
-            margin-bottom: 0.2em;
+            margin-bottom: 0.3em;
         }
-        .subtitle {
-            font-size: 1.1rem;
-            color: #2d7cff;
-            text-align: center;
-            margin-bottom: 1.2em;
-        }
-        .brand-circle {
-            width: 80px;
-            height: 80px;
-            background: #fff;
-            border: 3px solid #2d7cff;
-            border-radius: 50%;
+        .about-btn {
             display: flex;
-            align-items: center;
             justify-content: center;
-            margin: 0 auto 1em auto;
-            box-shadow: 0 4px 16px rgba(45,124,255,0.08);
-        }
-        .brand-circle span {
-            color: #2d7cff;
-            font-size: 2.5rem;
-            font-weight: bold;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            letter-spacing: 1px;
+            margin-bottom: 1em;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
-        <div class="brand-circle"><span>SC</span></div>
-        <div class="main-title">SmartCapital.ai</div>
-        <div class="subtitle">
-            We analyze and predict stocks using ML, assist with personal finance, and provide an ITR calculator.
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="brand-title">SmartCapital.ai</div>', unsafe_allow_html=True)
+    st.markdown('<div class="blue-bar">We analyze and predict stocks using ML, assist with personal finance, provide an ITR calculator, and help you find career opportunities with us.</div>', unsafe_allow_html=True)
+
+    # About Us section (expand/collapse)
+    with st.expander("About Us"):
+        st.markdown("""
+        Welcome, new user!  
+        **SmartCapital.ai** is your all-in-one platform for:
+        - Stock market analysis and prediction using advanced machine learning
+        - Personal finance management tools
+        - ITR (Income Tax Return) calculator
+        - Career opportunities in the world of finance and technology
+
+        Our mission is to empower you with data-driven insights and tools for smarter financial decisions.
+        """)
 
     # Tabs: Sign Up first, then Login
     tab2, tab1 = st.tabs(["Create Account", "Login"])
 
     with tab2:
+        st.markdown("#### Welcome, new user! Create your account below:")
         signup_email = st.text_input("📧 Email", key="signup_email_input")
         signup_password = st.text_input("🔑 Password", type="password", key="signup_password_input")
         if st.button("Create Account", key="signup_button"):
