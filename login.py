@@ -54,7 +54,7 @@ def login_ui():
     if st.session_state.get("authenticated", False):
         return True, st.session_state.get("user_email", "")
 
-    # --- Your branding and About Us section here ---
+    # --- Branding and About Us section ---
     st.markdown("""
         <style>
         .brand-title {
@@ -78,7 +78,7 @@ def login_ui():
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="brand-title">SmartCapital.ai</div>', unsafe_allow_html=True)
-    
+    st.markdown('<div class="subtitle">Find career opportunities</div>', unsafe_allow_html=True)
 
     with st.expander("About Us"):
         st.markdown("""
@@ -103,6 +103,7 @@ def login_ui():
             if signup_email and signup_password:
                 if signup(signup_email, signup_password):
                     st.success("Account created! Please log in.")
+                    st.experimental_rerun()  # <--- Force rerun after signup
             else:
                 st.warning("Please enter both email and password.")
 
@@ -113,6 +114,7 @@ def login_ui():
             if login_email and login_password:
                 if login(login_email, login_password):
                     st.success("Logged in successfully! Please wait...")
+                    st.experimental_rerun()  # <--- Force rerun after login
             else:
                 st.warning("Please enter both email and password.")
 
