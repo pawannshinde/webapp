@@ -50,20 +50,9 @@ def logout():
 def login_ui():
     init_session_state()
 
-    # CSS for blue bar and brand
+    # CSS for brand
     st.markdown("""
         <style>
-        .blue-bar {
-            background: #2d7cff;
-            color: #fff !important;
-            padding: 1.2em 1em 1.2em 1em;
-            border-radius: 12px;
-            margin-bottom: 1.5em;
-            text-align: center;
-            font-size: 1.15rem;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-weight: 500;
-        }
         .brand-title {
             font-family: 'Segoe UI', Arial, sans-serif;
             font-size: 2.5rem;
@@ -73,26 +62,31 @@ def login_ui():
             text-align: center;
             margin-bottom: 0.3em;
         }
-        .about-btn {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 1em;
+        .subtitle {
+            font-size: 1.15rem;
+            color: #2d7cff;
+            text-align: center;
+            margin-bottom: 1.5em;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-weight: 500;
         }
         </style>
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="brand-title">SmartCapital.ai</div>', unsafe_allow_html=True)
-    st.markdown('<div class="blue-bar">We analyze and predict stocks using ML, assist with personal finance, provide an ITR calculator, and help you find career opportunities with us.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Find career opportunities</div>', unsafe_allow_html=True)
 
     # About Us section (expand/collapse)
     with st.expander("About Us"):
         st.markdown("""
         Welcome, new user!  
         **SmartCapital.ai** is your all-in-one platform for:
-        - Stock market analysis and prediction using advanced machine learning
-        - Personal finance management tools
-        - ITR (Income Tax Return) calculator
-        - Career opportunities in the world of finance and technology
+        - We analyze and predict stocks using machine learning algorithms
+        - Get personalized stock recommendations based on your portfolio
+        - We also use machine learnig to learn and automate from the excel sheets you upload.
+        - Assist with personal finance
+        - Provide an ITR calculator and filling assistance
+        - Help you find career opportunities
 
         Our mission is to empower you with data-driven insights and tools for smarter financial decisions.
         """)
