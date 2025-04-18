@@ -7,10 +7,14 @@ from model_utils import get_data_from_alpha_vantage, train_and_return_model
 
 st.set_page_config(page_title="SmartCapital.ai Dashboard", layout="wide")
 
-# Authentication
+# --- Authentication ---
 authenticated, user_email = login_ui()
+
 if not authenticated:
+    # Stop here if not logged in: ONLY show login/signup UI
     st.stop()
+
+# --- From here on, ONLY the dashboard is shown if authenticated! ---
 
 # --- Sidebar Navigation ---
 st.sidebar.image("https://i.imgur.com/1Q9Z1Zm.png", width=60)  # Optional: your logo
