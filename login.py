@@ -50,7 +50,11 @@ def logout():
 def login_ui():
     init_session_state()
 
-    # CSS for brand
+    # If already authenticated, don't show login/signup UI
+    if st.session_state.get("authenticated", False):
+        return True, st.session_state.get("user_email", "")
+
+    # --- Your branding and About Us section here ---
     st.markdown("""
         <style>
         .brand-title {
@@ -74,18 +78,16 @@ def login_ui():
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="brand-title">SmartCapital.ai</div>', unsafe_allow_html=True)
-   
-    # About Us section (expand/collapse)
+    st.markdown('<div class="subtitle">Find career opportunities</div>', unsafe_allow_html=True)
+
     with st.expander("About Us"):
         st.markdown("""
         Welcome, new user!  
         **SmartCapital.ai** is your all-in-one platform for:
-        - We analyze and predict stocks using machine learning algorithms
-        - Get personalized stock recommendations based on your portfolio
-        - We also use machine learnig to learn and automate from the excel sheets you upload.
+        - We analyze and predict stocks using ML
         - Assist with personal finance
-        - Provide an ITR calculator and filling assistance
-        - Help you find career opportunities
+        - Provide an ITR calculator
+        - Help you find career opportunities in the world of finance and technology
 
         Our mission is to empower you with data-driven insights and tools for smarter financial decisions.
         """)
@@ -111,5 +113,7 @@ def login_ui():
             if login_email and login_password:
                 if login(login_email, login_password):
                     st.success("Logged in successfully! Please wait...")
+            else:
+                st.warning("Please enter both email and password.")
 
     return st.session_state.get("authenticated", False), st.session_state.get("user_email", "")
