@@ -9,4 +9,5 @@ firebase-admin
 python-dotenv
 pyrebase4
 beautifulsoup4
+plotly
 
