@@ -2,7 +2,9 @@ import pandas as pd
 import requests
 import numpy as np
 import tensorflow as tf
+import joblib
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.ensemble import RandomForestClassifier
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.model_selection import train_test_split
@@ -20,7 +22,7 @@ def get_data_from_alpha_vantage(symbol):
 
     df = pd.DataFrame.from_dict(ts_data, orient='index').astype(float)
     df.index = pd.to_datetime(df.index)
-    df = df.sort_index()  # Full history, sorted
+    df = df.sort_index()
 
     df = df.rename(columns={
         "1. open": "Open",
@@ -45,8 +47,18 @@ def train_and_return_model(df):
     features = ['Open', 'High', 'Low', 'Close', 'Volume']
     scaler = MinMaxScaler()
     scaled_features = scaler.fit_transform(df[features])
-
     X, y = create_sequences(scaled_features, df['Target'].values)
+
+    # Split for both models
+    X_flat = scaled_features[60:]
+    y_flat = df['Target'].values[60:]
+    X_train_flat, X_test_flat, y_train_flat, y_test_flat = train_test_split(
+        X_flat, y_flat, test_size=0.2, shuffle=False
+    )
+
+    rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+    rf_model.fit(X_train_flat, y_train_flat)
+    joblib.dump(rf_model, 'rf_model.pkl')
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, shuffle=False
@@ -61,13 +73,12 @@ def train_and_return_model(df):
     model.add(Dense(1, activation='sigmoid'))
 
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-
     model.fit(
         X_train, y_train,
-        epochs=25,
+        epochs=10,
         batch_size=32,
         validation_split=0.1,
-        verbose=1
+        verbose=0
     )
 
     return model, scaler
