@@ -4,12 +4,14 @@ import requests
 import yfinance as yf
 from transformers import pipeline
 
-# Load DeepSeek or similar local/hosted model
+# Load DeepSeek model or fallback
 try:
     generator = pipeline("text-generation", model="deepseek-ai/deepseek-llm-7b", device=0)
+    llm_available = True
 except Exception:
-    generator = lambda prompt: ["(⚠️ LLM not available. Showing mock reply.)"]
-
+    llm_available = False
+    def generator(prompt, max_length=100):
+        return [{"generated_text": "(⚠️ LLM not available. Showing mock reply.)"}]
 
 def run_personal_finance():
     st.markdown('<div class="main-title">Personal Finance Tools</div>', unsafe_allow_html=True)
@@ -23,10 +25,8 @@ def run_personal_finance():
     if st.button("Estimate Returns") and asset_name:
         with st.spinner("Calculating with real data..."):
             try:
-                # Get past date
                 today = datetime.date.today()
                 past_date = today.replace(year=today.year - years_ago)
-
                 ticker = yf.Ticker(asset_name)
                 hist = ticker.history(start=past_date, end=today)
 
@@ -43,12 +43,22 @@ def run_personal_finance():
 
                 # AI Insight
                 prompt = f"User invested ₹{invest_amount} in {asset_name} stock {years_ago} years ago. The value grew by {growth:.2f}x. Summarize insight in one helpful paragraph."
-                try:
-                    ai_result = generator(prompt, max_length=150)[0]['generated_text']
-                except:
-                    ai_result = generator(prompt)[0]  # fallback if not huggingface
-
+                ai_result = generator(prompt, max_length=150)[0]['generated_text']
                 st.info(ai_result)
 
             except Exception as e:
                 st.error(f"Calculation error: {str(e)}")
+
+    st.markdown("---")
+
+    # --- AI Financial Assistant Chatbot ---
+    st.subheader("🤖 Ask Finance Assistant Bot")
+    user_query = st.text_area("Ask me anything about stocks, mutual funds, investing, or personal finance")
+    if st.button("Ask Bot") and user_query:
+        with st.spinner("Thinking..."):
+            try:
+                chat_prompt = f"You are a friendly and knowledgeable personal finance assistant. Answer the following: {user_query}"
+                response = generator(chat_prompt, max_length=250)[0]['generated_text']
+                st.success(response)
+            except Exception as e:
+                st.error(f"Bot error: {str(e)}")
