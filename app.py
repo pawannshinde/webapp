@@ -155,9 +155,10 @@ if menu == "📈 Stock Market Prediction":
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
-elif menu == "💰 Personal Finance (Coming Soon)":
-    st.markdown('<div class="main-title">Personal Finance</div>', unsafe_allow_html=True)
-    st.info("Coming soon! You'll be able to track expenses, set budgets, and more.")
+elif menu == "💰 Personal Finance":
+    from personal_finance import run_personal_finance
+    run_personal_finance()
+
 
 elif menu == "🧾 ITR Calculator (Coming Soon)":
     st.markdown('<div class="main-title">ITR Calculator</div>', unsafe_allow_html=True)
