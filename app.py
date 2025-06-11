@@ -37,10 +37,11 @@ st.sidebar.markdown("---")
 
 menu = st.sidebar.radio("Go to", [
     "📈 Stock Market Prediction",
-    "💰 Personal Finance (Coming Soon)",
+    "💰 Personal Finance",
     "🧾 ITR Calculator (Coming Soon)",
     "ℹ️ About Us"
 ])
+
 
 # Style
 st.markdown("""
