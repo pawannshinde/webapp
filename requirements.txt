@@ -15,6 +15,9 @@ joblib
 openai
 google-search-results
 serpapi
+yfinance
+transformers
+
 
 
 
