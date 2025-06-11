@@ -4,53 +4,64 @@ from serpapi import GoogleSearch
 import openai
 import os
 
-# --- GPT Setup (using Streamlit Cloud secrets) ---
-openai.api_key = st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
+# --- GPT Setup (Streamlit Cloud secrets or fallback to env) ---
+from openai import OpenAI
+client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
 
-# --- SerpAPI Setup (using Streamlit Cloud secrets) ---
+# --- SerpAPI Setup ---
 SERPAPI_KEY = st.secrets.get("SERPAPI_KEY", os.getenv("SERPAPI_KEY"))
 
 def run_personal_finance():
     st.markdown('<div class="main-title">Personal Finance Tools</div>', unsafe_allow_html=True)
 
-    # --- Investment Interest Estimator ---
-    st.subheader("📈 Investment Return Estimator")
-    stock_price = st.number_input("Stock Price at Purchase (₹)", min_value=1.0)
-    current_price = st.number_input("Current Stock Price (₹)", min_value=1.0)
-    shares = st.number_input("Number of Shares Bought", min_value=1)
-    purchase_date = st.date_input("Purchase Date", max_value=datetime.date.today())
+    # --- AI-powered Investment Insight Tool ---
+    st.subheader("📊 Mutual Fund / Stock Return Estimator")
 
-    if st.button("Calculate Returns"):
-        investment = stock_price * shares
-        current_value = current_price * shares
-        profit = current_value - investment
-        st.success(f"Investment Value: ₹{investment:.2f}")
-        st.success(f"Current Value: ₹{current_value:.2f}")
-        st.info(f"Total Profit/Loss: ₹{profit:.2f}")
+    asset_name = st.text_input("Enter Mutual Fund or Stock Name (e.g., RIL, Tata Digital India Fund)")
+    invest_amount = st.number_input("Investment Amount (₹)", min_value=100.0)
+    years_ago = st.slider("How many years ago?", min_value=1, max_value=10, value=3)
+
+    if st.button("Estimate Returns") and asset_name:
+        with st.spinner("Calculating returns..."):
+            try:
+                # Use SerpAPI to simulate price discovery (mocked context for GPT)
+                search = GoogleSearch({"q": f"{asset_name} price {years_ago} years ago", "api_key": SERPAPI_KEY})
+                results = search.get_dict()
+                snippet = results.get("organic_results", [{}])[0].get("snippet", "No price data found.")
+
+                # Ask GPT to simulate return estimation from historical data context
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are a financial assistant who estimates returns based on asset performance."},
+                        {"role": "user", "content": f"If I had invested ₹{invest_amount} in {asset_name} {years_ago} years ago, how much would it be worth now? Context: {snippet}"}
+                    ]
+                )
+                reply = response.choices[0].message.content
+                st.success(reply)
+            except Exception as e:
+                st.error(f"Error fetching data or AI response: {str(e)}")
 
     st.markdown("---")
 
-    # --- AI Financial Chat Assistant ---
+    # --- AI Financial Query Bot ---
     st.subheader("🤖 Ask our AI Financial Assistant")
-    user_query = st.text_input("Type your query (e.g., Best mutual funds under ₹5000)")
+    user_query = st.text_input("Type your query (e.g., Top ELSS mutual funds 2024)")
     if st.button("Ask Bot") and user_query:
         with st.spinner("Searching online..."):
             try:
-                search = GoogleSearch({
-                    "q": user_query,
-                    "api_key": SERPAPI_KEY
-                })
+                search = GoogleSearch({"q": user_query, "api_key": SERPAPI_KEY})
                 results = search.get_dict()
                 snippet = results.get("organic_results", [{}])[0].get("snippet", "No result found.")
 
-                gpt_response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": "You are a financial assistant."},
-                        {"role": "user", "content": f"{user_query} (hint: use context - {snippet})"}
+                        {"role": "system", "content": "You are a helpful financial assistant."},
+                        {"role": "user", "content": f"{user_query}. Use this context: {snippet}"}
                     ]
                 )
-                reply = gpt_response["choices"][0]["message"]["content"]
+                reply = response.choices[0].message.content
                 st.success(reply)
             except Exception as e:
-                st.error(f"Error: {str(e)}")
+                st.error(f"Error during AI response: {str(e)}")
