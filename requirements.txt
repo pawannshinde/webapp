@@ -17,6 +17,7 @@ google-search-results
 serpapi
 yfinance
 transformers
+torch
 
 
 
