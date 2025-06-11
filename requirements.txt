@@ -12,6 +12,8 @@ beautifulsoup4
 plotly
 lxml
 joblib
+openai
+google-search-results
 
 
 
