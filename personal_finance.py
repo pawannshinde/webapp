@@ -1,98 +1,78 @@
 import streamlit as st
 import datetime
-import requests
 import yfinance as yf
-
-# --- Attempt to load DeepSeek or fallback to OpenAI (modern) ---
-generator = None
-llm_mode = "none"
-
-# Try DeepSeek
-try:
-    from transformers import pipeline
-    generator = pipeline("text-generation", model="deepseek-ai/deepseek-llm-7b", device=0)
-    llm_mode = "deepseek"
-except Exception:
-    # Try OpenAI (new API)
-    try:
-        import openai
-        import os
-        openai.api_key = st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
-
-        def openai_generate(prompt, max_tokens=250):
-            chat = openai.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a smart personal finance assistant."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=max_tokens
-            )
-            return chat.choices[0].message.content
-
-        llm_mode = "openai"
-    except Exception:
-        def mock_response(prompt, max_tokens=250):
-            return "(⚠️ No LLM available. Showing mock reply.)"
-        llm_mode = "mock"
+import pandas as pd
 
 def run_personal_finance():
-    st.markdown('<div class="main-title">Personal Finance Tools</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title">💬 Smart Finance Assistant</div>', unsafe_allow_html=True)
 
-    # --- Return Estimator ---
-    st.subheader("📊 Mutual Fund / Stock Return Estimator")
-    asset_name = st.text_input("Enter Stock Ticker (e.g., RELIANCE.BO, INFY.BO, AAPL)")
-    invest_amount = st.number_input("Investment Amount (₹)", min_value=100.0)
-    years_ago = st.slider("Years Ago", min_value=1, max_value=10, value=3)
+    st.subheader("🤖 Choose Your Query")
+    query_type = st.selectbox("What would you like to know?", [
+        "📈 Stock Price & Stats",
+        "💰 Investment Return Estimator",
+        "📊 Compare 2 Stocks"
+    ])
 
-    if st.button("Estimate Returns") and asset_name:
-        with st.spinner("Calculating with real data..."):
+    if query_type == "📈 Stock Price & Stats":
+        symbol = st.text_input("Enter Stock Ticker (e.g., INFY.BO, AAPL, TSLA)", value="INFY.BO")
+        if st.button("Get Info"):
             try:
-                today = datetime.date.today()
-                past_date = today.replace(year=today.year - years_ago)
-                ticker = yf.Ticker(asset_name)
-                hist = ticker.history(start=past_date, end=today)
+                stock = yf.Ticker(symbol)
+                info = stock.info
+                hist = stock.history(period="6mo")
 
                 if hist.empty:
-                    st.error("No data found. Try a valid stock ticker (e.g., RELIANCE.BO for BSE stocks)")
+                    st.warning("⚠️ No data found. Try another ticker.")
                     return
 
-                start_price = hist["Close"].iloc[0]
-                end_price = hist["Close"].iloc[-1]
-                growth = end_price / start_price
-                returns = invest_amount * growth
-
-                st.success(f"If you had invested ₹{invest_amount:.2f} in {asset_name} {years_ago} years ago,\n\n👉 Today it would be worth ₹{returns:.2f} (Growth: {growth:.2f}x)")
-
-                # AI Insight
-                prompt = f"User invested ₹{invest_amount} in {asset_name} stock {years_ago} years ago. The value grew by {growth:.2f}x. Summarize insight in one helpful paragraph."
-                if llm_mode == "deepseek":
-                    ai_result = generator(prompt, max_length=150)[0]['generated_text']
-                elif llm_mode == "openai":
-                    ai_result = openai_generate(prompt)
-                else:
-                    ai_result = mock_response(prompt)
-
-                st.info(ai_result)
+                st.write(f"**Name**: {info.get('shortName', '-')}")
+                st.write(f"**Market Cap**: ₹{info.get('marketCap', 'N/A')}")
+                st.write(f"**Current Price**: ₹{info.get('currentPrice', 'N/A')}")
+                st.line_chart(hist["Close"])
 
             except Exception as e:
-                st.error(f"Calculation error: {str(e)}")
+                st.error(f"⚠️ Error: {str(e)}")
+
+    elif query_type == "💰 Investment Return Estimator":
+        symbol = st.text_input("Stock Ticker (e.g., RELIANCE.BO)", value="RELIANCE.BO")
+        amount = st.number_input("Investment Amount (₹)", min_value=100.0)
+        years = st.slider("Years Ago", 1, 10, 3)
+
+        if st.button("Estimate Returns"):
+            try:
+                today = datetime.date.today()
+                past = today.replace(year=today.year - years)
+                data = yf.Ticker(symbol).history(start=past, end=today)
+
+                if data.empty:
+                    st.warning("⚠️ No data for this stock.")
+                    return
+
+                start_price = data["Close"].iloc[0]
+                end_price = data["Close"].iloc[-1]
+                growth = end_price / start_price
+                final = amount * growth
+
+                st.success(f"₹{amount:.2f} → ₹{final:.2f} in {years} years ({growth:.2f}x growth)")
+                st.line_chart(data["Close"])
+
+            except Exception as e:
+                st.error(f"⚠️ Error: {str(e)}")
+
+    elif query_type == "📊 Compare 2 Stocks":
+        stock1 = st.text_input("First Ticker", value="RELIANCE.BO")
+        stock2 = st.text_input("Second Ticker", value="TCS.BO")
+        period = st.selectbox("Comparison Period", ["3mo", "6mo", "1y"], index=1)
+
+        if st.button("Compare"):
+            try:
+                df1 = yf.Ticker(stock1).history(period=period)["Close"]
+                df2 = yf.Ticker(stock2).history(period=period)["Close"]
+                df = pd.DataFrame({stock1: df1, stock2: df2})
+                st.line_chart(df)
+                st.caption(f"Comparison for {period.upper()}")
+            except Exception as e:
+                st.error(f"⚠️ Error: {str(e)}")
 
     st.markdown("---")
-
-    # --- AI Financial Assistant Chatbot ---
-    st.subheader("🤖 Ask Finance Assistant Bot")
-    user_query = st.text_area("Ask me anything about stocks, mutual funds, investing, or personal finance")
-    if st.button("Ask Bot") and user_query:
-        with st.spinner("Thinking..."):
-            try:
-                prompt = f"You are a friendly and knowledgeable personal finance assistant. Answer the following: {user_query}"
-                if llm_mode == "deepseek":
-                    response = generator(prompt, max_length=250)[0]['generated_text']
-                elif llm_mode == "openai":
-                    response = openai_generate(prompt)
-                else:
-                    response = mock_response(prompt)
-                st.success(response)
-            except Exception as e:
-                st.error(f"Bot error: {str(e)}")
+    st.caption("Simple Finance Bot - powered by yfinance & Python only. No API keys needed.")
