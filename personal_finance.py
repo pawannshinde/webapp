@@ -2,12 +2,13 @@ import streamlit as st
 import datetime
 from serpapi import GoogleSearch
 import openai
+import os
 
-# --- GPT Setup (Free tier works with OpenAI key or other free model) ---
-openai.api_key = st.secrets["OPENAI_API_KEY"]  # Add this to .streamlit/secrets.toml
+# --- GPT Setup (using Streamlit Cloud secrets) ---
+openai.api_key = st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
 
-# --- SerpAPI Setup ---
-SERPAPI_KEY = st.secrets["SERPAPI_KEY"]  # Add to secrets as well
+# --- SerpAPI Setup (using Streamlit Cloud secrets) ---
+SERPAPI_KEY = st.secrets.get("SERPAPI_KEY", os.getenv("SERPAPI_KEY"))
 
 def run_personal_finance():
     st.markdown('<div class="main-title">Personal Finance Tools</div>', unsafe_allow_html=True)
@@ -53,4 +54,3 @@ def run_personal_finance():
                 st.success(reply)
             except Exception as e:
                 st.error(f"Error: {str(e)}")
-
