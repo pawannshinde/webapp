@@ -57,6 +57,25 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+def fetch_stock_news(symbol):
+    try:
+        query = symbol.replace('.', '-')
+        url = f"https://www.google.com/search?q={query}+stock+news"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        page = requests.get(url, headers=headers, timeout=5)
+        soup = BeautifulSoup(page.text, "html.parser")
+
+        news = []
+        for div in soup.select('div.BVG0Nb')[:2]:
+            title = div.get_text()
+            source_tag = div.find_parent().find_next('div')
+            source = source_tag.get_text() if source_tag else 'Unknown Source'
+            news.append(f"• **{title}** ({source})")
+
+        return news if news else ["No news found."]
+    except Exception as e:
+        return [f"News fetch error: {str(e)}"]
+
 if menu == "📈 Stock Market Prediction":
     st.markdown('<div class="main-title">Stock Market Prediction</div>', unsafe_allow_html=True)
     stock_name = st.selectbox("Select a Stock", list(STOCKS.keys()))
@@ -82,26 +101,26 @@ if menu == "📈 Stock Market Prediction":
             X = scaled_data.reshape(1, 60, 5)
             prediction = model.predict(X)[0][0]
 
-            # --- Prediction Summary Table
             prediction_result = "Up 📈" if prediction > 0.5 else "Down 📉"
             st.success(f"Prediction for {symbol}: **{prediction_result}** (Confidence: {prediction:.2f})")
 
-            # --- Graphs
-            st.markdown('<div class="section-title">Recent Closing Prices</div>', unsafe_allow_html=True)
-            fig1 = go.Figure()
-            fig1.add_trace(go.Scatter(y=df['Close'].tail(100), mode='lines', name='Close'))
-            fig1.update_layout(title=f"{symbol} - Closing Prices", height=300)
-            st.plotly_chart(fig1, use_container_width=True)
+            if not df.empty:
+                st.markdown('<div class="section-title">Recent Closing Prices</div>', unsafe_allow_html=True)
+                fig1 = go.Figure()
+                fig1.add_trace(go.Scatter(x=df.index[-100:], y=df['Close'].tail(100), mode='lines', name='Close'))
+                fig1.update_layout(title=f"{symbol} - Closing Prices", height=300)
+                st.plotly_chart(fig1, use_container_width=True)
 
-            st.markdown('<div class="section-title">Candlestick Chart</div>', unsafe_allow_html=True)
-            fig2 = go.Figure(data=[go.Candlestick(
-                x=df.index[-60:], open=df['Open'].tail(60), high=df['High'].tail(60),
-                low=df['Low'].tail(60), close=df['Close'].tail(60)
-            )])
-            fig2.update_layout(title=f"{symbol} - Last 60 Days", height=350)
-            st.plotly_chart(fig2, use_container_width=True)
+                st.markdown('<div class="section-title">Candlestick Chart</div>', unsafe_allow_html=True)
+                fig2 = go.Figure(data=[go.Candlestick(
+                    x=df.index[-60:], open=df['Open'].tail(60), high=df['High'].tail(60),
+                    low=df['Low'].tail(60), close=df['Close'].tail(60)
+                )])
+                fig2.update_layout(title=f"{symbol} - Last 60 Days", height=350)
+                st.plotly_chart(fig2, use_container_width=True)
+            else:
+                st.warning("No data available to plot.")
 
-            # --- Tables
             st.markdown('<div class="section-title">Recent OHLCV Data</div>', unsafe_allow_html=True)
             st.dataframe(df.tail(10).style.format("{:.2f}"))
 
@@ -113,20 +132,10 @@ if menu == "📈 Stock Market Prediction":
                 "Date": [datetime.now().strftime("%Y-%m-%d %H:%M")]
             }))
 
-            # --- News (No API)
             st.markdown('<div class="section-title">Recent News</div>', unsafe_allow_html=True)
-            try:
-                news_url = f"https://www.google.com/search?q={symbol}+stock+news&tbm=nws"
-                headers = {"User-Agent": "Mozilla/5.0"}
-                news_page = requests.get(news_url, headers=headers)
-                soup = BeautifulSoup(news_page.text, 'html.parser')
-                articles = soup.find_all('div', class_='BVG0Nb', limit=5)
-                for a in articles:
-                    title = a.find('div', class_='n0jPhd ynAwRc MBeuO nDgy9d').text
-                    link = a.find('a')['href']
-                    st.markdown(f"🔗 [{title}]({link})")
-            except:
-                st.info("News not available right now.")
+            news_list = fetch_stock_news(symbol)
+            for news in news_list:
+                st.markdown(news)
 
         except Exception as e:
             st.error(f"Error: {str(e)}")
