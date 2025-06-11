@@ -1,27 +1,20 @@
 import streamlit as st
 import os
-import matplotlib.pyplot as plt
 import joblib
+import plotly.graph_objs as go
 from login import login_ui, logout
 from model_utils import get_data_from_alpha_vantage, train_and_return_model
 
 st.set_page_config(page_title="SmartCapital.ai Dashboard", layout="wide")
 
-# --- Authentication ---
 authenticated, user_email = login_ui()
-
 if not authenticated:
-    # Stop here if not logged in: ONLY show login/signup UI
     st.stop()
 
-# --- From here on, ONLY the dashboard is shown if authenticated! ---
-
-# --- Sidebar Navigation ---
-st.sidebar.image("https://i.imgur.com/1Q9Z1Zm.png", width=60)  # Optional: your logo
-st.sidebar.markdown(
-    "<h2 style='color:#2d7cff; font-family:Segoe UI,Arial,sans-serif;'>SmartCapital.ai</h2>",
-    unsafe_allow_html=True
-)
+st.sidebar.image("https://i.imgur.com/1Q9Z1Zm.png", width=60)
+st.sidebar.markdown("""
+    <h2 style='color:#2d7cff; font-family:Segoe UI,Arial,sans-serif;'>SmartCapital.ai</h2>
+""", unsafe_allow_html=True)
 st.sidebar.markdown(f"**Welcome, {user_email} 👋**")
 st.sidebar.markdown("---")
 
@@ -35,8 +28,7 @@ menu = st.sidebar.radio(
     ]
 )
 
-st.markdown(
-    """
+st.markdown("""
     <style>
     .main-title {
         font-family: 'Segoe UI', Arial, sans-serif;
@@ -55,51 +47,53 @@ st.markdown(
         font-weight: 600;
     }
     </style>
-    """,
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
-# --- Main Content ---
 if menu == "📈 Stock Market Prediction":
     st.markdown('<div class="main-title">Stock Market Prediction</div>', unsafe_allow_html=True)
-    st.markdown(
-        "Use our ML-powered engine to forecast stock trends. Enter a stock symbol below to get started."
-    )
+    st.markdown("Use our ML-powered engine to forecast stock trends. Enter a stock symbol below to get started.")
     symbol = st.text_input("Enter Stock Symbol (e.g., AAPL for Apple):", "AAPL").upper()
+
     if st.button("Predict"):
-        try:
-            # Load or train model
-            model_path = f"{symbol}_model.h5"
-            scaler_path = f"{symbol}_scaler.pkl"
-            if os.path.exists(model_path) and os.path.exists(scaler_path):
+        with st.spinner("Loading model and making predictions..."):
+            try:
+                model_path = f"{symbol}_model.h5"
+                scaler_path = f"{symbol}_scaler.pkl"
+
                 from tensorflow.keras.models import load_model
-                model = load_model(model_path)
-                scaler = joblib.load(scaler_path)
-            else:
+
+                if os.path.exists(model_path) and os.path.exists(scaler_path):
+                    model = load_model(model_path)
+                    scaler = joblib.load(scaler_path)
+                else:
+                    df = get_data_from_alpha_vantage(symbol)
+                    model, scaler = train_and_return_model(df)
+                    model.save(model_path)
+                    joblib.dump(scaler, scaler_path)
+
                 df = get_data_from_alpha_vantage(symbol)
-                model, scaler = train_and_return_model(df)
-                model.save(model_path)
-                joblib.dump(scaler, scaler_path)
+                recent_data = df[['Open', 'High', 'Low', 'Close', 'Volume']].tail(60)
+                scaled_data = scaler.transform(recent_data)
+                X = scaled_data.reshape(1, 60, 5)
+                prediction = model.predict(X)[0][0]
 
-            # Get recent data for prediction
-            df = get_data_from_alpha_vantage(symbol)
-            recent_data = df[['Open', 'High', 'Low', 'Close', 'Volume']].tail(60)
-            scaled_data = scaler.transform(recent_data)
-            X = scaled_data.reshape(1, 60, 5)
-            prediction = model.predict(X)[0][0]
+                predicted_label = "Up" if prediction > 0.5 else "Down"
+                st.metric(label="📉 Tomorrow's Prediction", value=predicted_label, delta=f"Confidence: {prediction:.2f}")
 
-            st.success(f"Prediction for {symbol}: **{'Up' if prediction > 0.5 else 'Down'}** (Confidence: {prediction:.2f})")
+                st.markdown('<div class="section-title">Recent Closing Prices</div>', unsafe_allow_html=True)
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=df.index[-100:], y=df['Close'].tail(100),
+                                         mode='lines+markers', name=symbol))
+                fig.update_layout(title=f"{symbol} Closing Prices",
+                                  xaxis_title="Date", yaxis_title="Price (USD)",
+                                  template="plotly_dark")
+                st.plotly_chart(fig, use_container_width=True)
 
-            # Plot closing prices
-            st.markdown('<div class="section-title">Recent Closing Prices</div>', unsafe_allow_html=True)
-            fig, ax = plt.subplots()
-            df['Close'].tail(100).plot(ax=ax, title=f"{symbol} Closing Prices")
-            ax.set_xlabel("Date")
-            ax.set_ylabel("Price (USD)")
-            st.pyplot(fig)
+                st.markdown('<div class="section-title">Sample Prediction Table (Coming)</div>', unsafe_allow_html=True)
+                st.table(df[['Close', 'Tomorrow']].tail(3).rename(columns={'Close': 'Today Close', 'Tomorrow': 'Next Day Close'}))
 
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
 
 elif menu == "💰 Personal Finance (Coming Soon)":
     st.markdown('<div class="main-title">Personal Finance</div>', unsafe_allow_html=True)
@@ -122,7 +116,6 @@ elif menu == "ℹ️ About Us":
     Our mission is to empower you with data-driven insights and tools for smarter financial decisions.
     """)
 
-# --- Logout Button ---
 st.sidebar.markdown("---")
 if st.sidebar.button("Logout"):
     logout()
