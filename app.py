@@ -111,13 +111,28 @@ if menu == "📈 Stock Market Prediction":
                 fig1.update_layout(title=f"{symbol} - Closing Prices", height=300)
                 st.plotly_chart(fig1, use_container_width=True)
 
-                st.markdown('<div class="section-title">Candlestick Chart</div>', unsafe_allow_html=True)
-                fig2 = go.Figure(data=[go.Candlestick(
-                    x=df.index[-60:], open=df['Open'].tail(60), high=df['High'].tail(60),
-                    low=df['Low'].tail(60), close=df['Close'].tail(60)
-                )])
-                fig2.update_layout(title=f"{symbol} - Last 60 Days", height=350)
-                st.plotly_chart(fig2, use_container_width=True)
+                # Plot predicted vs actual for last 10 days
+                st.markdown('<div class="section-title">Actual vs Predicted (Last 10 Days)</div>', unsafe_allow_html=True)
+                df_recent = df.tail(70).copy()
+                scaled_recent = scaler.transform(df_recent[['Open', 'High', 'Low', 'Close', 'Volume']])
+                X_all, y_all = [], []
+                for i in range(60, len(scaled_recent)):
+                    X_all.append(scaled_recent[i-60:i])
+                    y_all.append(df_recent['Target'].iloc[i])
+
+                X_all = np.array(X_all)
+                y_all = np.array(y_all)
+                preds = model.predict(X_all).flatten()
+                df_plot = pd.DataFrame({
+                    "Date": df_recent.index[60:],
+                    "Actual": y_all,
+                    "Predicted": preds
+                })
+                fig3 = go.Figure()
+                fig3.add_trace(go.Scatter(x=df_plot['Date'], y=df_plot['Actual'], mode='lines+markers', name='Actual'))
+                fig3.add_trace(go.Scatter(x=df_plot['Date'], y=df_plot['Predicted'], mode='lines+markers', name='Predicted'))
+                fig3.update_layout(title="Model Prediction vs Actual (last 10 days)", height=300)
+                st.plotly_chart(fig3, use_container_width=True)
             else:
                 st.warning("No data available to plot.")
 
